@@ -31,7 +31,7 @@ def shorten():
         """
         cursor.execute(update, (short_code, row_id))
         conn.commit()
-    return f"http://ember/r/{short_code}"
+    return f"https://web-production-a7210.up.railway.app/r/{short_code}"
 
 def base62_encoder(n):
     strings = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
