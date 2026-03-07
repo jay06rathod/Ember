@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ember</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0c0b;
+      --text: #f5e6d3;
+      --text-dim: rgba(245, 220, 190, 0.4);
+      --text-muted: rgba(245, 220, 190, 0.22);
+      --accent: #e8521a;
+      --accent-soft: rgba(232, 82, 26, 0.15);
+      --accent-glow: rgba(232, 82, 26, 0.35);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .glass-overlay {
+      position: fixed;
+      inset: 0;
+      backdrop-filter: blur(22px) brightness(0.42) saturate(0.8);
+      -webkit-backdrop-filter: blur(22px) brightness(0.42) saturate(0.8);
+      background: rgba(10, 6, 4, 0.38);
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glass-overlay.hidden { opacity: 0; }
+
+    .ui {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .card {
+      pointer-events: all;
+      width: min(460px, 90vw);
+      background: rgba(20, 12, 8, 0.62);
+      backdrop-filter: blur(36px) saturate(1.3);
+      -webkit-backdrop-filter: blur(36px) saturate(1.3);
+      border: 1px solid rgba(255, 180, 100, 0.1);
+      border-radius: 28px;
+      padding: 2.8rem 2.8rem 2.4rem;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 1px 0 rgba(255, 180, 80, 0.07),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+        8px 8px 32px rgba(0,0,0,0.55),
+        -2px -2px 12px rgba(255, 140, 60, 0.05),
+        0 40px 80px rgba(0,0,0,0.5);
+      opacity: 0;
+      transform: translateY(28px);
+    }
+
+    .brand { margin-bottom: 2.2rem; }
+
+    .brand-top {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .brand h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+
+    .brand-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow), 0 0 4px var(--accent);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .brand-sub {
+      font-size: 0.6rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    /* Entropy strip */
+    .entropy-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.6rem;
+      padding: 0.55rem 0.9rem;
+      /* background: rgba(255, 255, 255, 0.025); */
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      box-shadow: inset 1px 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .entropy-label {
+      font-size: 0.57rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    .entropy-val {
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      color: rgba(232, 120, 60, 0.5);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Input */
+    input[type="text"] {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 1rem 1.2rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 300;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+      letter-spacing: 0.01em;
+      margin-bottom: 0.85rem;
+      box-shadow:
+        inset 2px 2px 8px rgba(0,0,0,0.4),
+        inset -1px -1px 4px rgba(255, 160, 80, 0.03);
+    }
+
+    input[type="text"]::placeholder { color: var(--text-muted); }
+
+    input[type="text"]:focus {
+      border-color: rgba(232, 82, 26, 0.38);
+      background: rgba(232, 82, 26, 0.03);
+      box-shadow:
+        inset 2px 2px 8px rgba(0,0,0,0.4),
+        0 0 0 3px rgba(232, 82, 26, 0.07);
+    }
+
+    /* Shorten button */
+    .shorten-btn {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      border-radius: 14px;
+      padding: 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow:
+        0 4px 22px rgba(232, 82, 26, 0.38),
+        inset 0 1px 0 rgba(255, 200, 120, 0.18),
+        inset 0 -2px 0 rgba(0,0,0,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shorten-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, transparent 55%);
+      border-radius: 14px;
+      pointer-events: none;
+    }
+
+    .shorten-btn:hover { opacity: 0.87; transform: translateY(-1px); }
+    .shorten-btn:active { transform: translateY(0px); }
+    .shorten-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Result */
+    .result {
+      margin-top: 1.2rem;
+      padding: 1rem 1.2rem;
+      background: rgba(232, 82, 26, 0.07);
+      border: 1px solid rgba(232, 82, 26, 0.16);
+      border-radius: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 0.65rem;
+      box-shadow: inset 0 1px 0 rgba(255,180,80,0.05);
+    }
+    .result.visible { display: flex; }
+
+    .result-label {
+      font-size: 0.54rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    .result-url {
+      font-size: 0.78rem;
+      color: #f07040;
+      letter-spacing: 0.02em;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px;
+      padding: 0.32rem 0.85rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      box-shadow:
+        2px 2px 5px rgba(0,0,0,0.25),
+        -1px -1px 3px rgba(255,160,80,0.03);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-soft);
+      border-color: rgba(232, 82, 26, 0.28);
+      color: var(--text);
+      transform: none;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.25);
+    }
+
+    .error {
+      margin-top: 0.75rem;
+      font-size: 0.67rem;
+      color: #f06060;
+      letter-spacing: 0.02em;
+      display: none;
+      line-height: 1.5;
+      font-weight: 300;
+    }
+    .error.visible { display: block; }
+
+    /* Corner elements */
+    .corner-tl, .corner-tr, .corner-br {
+      position: fixed;
+      z-index: 10;
+      pointer-events: all;
+      opacity: 0;
+    }
+
+    .corner-tl { top: 2rem; left: 2.5rem; }
+    .corner-tr { top: 2rem; right: 2.5rem; }
+    .corner-br { bottom: 2rem; right: 2.5rem; }
+
+    .corner-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.06em;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+
+    .pill-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 0.38rem 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      box-shadow:
+        2px 2px 8px rgba(0,0,0,0.3),
+        -1px -1px 4px rgba(255,160,80,0.03);
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .pill-btn:hover {
+      background: var(--accent-soft);
+      border-color: rgba(232, 82, 26, 0.28);
+      color: var(--text);
+      transform: none;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(16, 9, 6, 0.94);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 180, 100, 0.1);
+      border-radius: 24px;
+      padding: 2.4rem 2.4rem 2rem;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03),
+        inset 0 1px 0 rgba(255,180,80,0.06),
+        8px 8px 32px rgba(0,0,0,0.55),
+        0 40px 80px rgba(0,0,0,0.7);
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
+      position: relative;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal::-webkit-scrollbar {
+      display: none;
+    }
+
+    .modal-backdrop.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-close {
+      position: absolute;
+      top: 1.2rem; right: 1.4rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-dim);
+      font-size: 0.68rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: none;
+    }
+
+    .modal-close:hover {
+      background: var(--accent-soft);
+      border-color: rgba(232,82,26,0.3);
+      color: var(--text);
+      transform: none; box-shadow: none;
+    }
+
+    .modal-author {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      margin-bottom: 1.8rem;
+      padding-bottom: 1.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .modal-author img {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(232,82,26,0.3);
+      box-shadow: 0 0 16px rgba(232,82,26,0.18);
+    }
+
+    .modal-author-info { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .modal-author-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .modal-author-links { display: flex; gap: 0.5rem; }
+
+    .modal-author-links a {
+      font-size: 0.56rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
+      font-weight: 300;
+    }
+
+    .modal-author-links a:hover {
+      background: var(--accent-soft);
+      border-color: rgba(232,82,26,0.28);
+      color: var(--text);
+    }
+
+    .modal h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+      line-height: 1.25;
+    }
+
+    .modal p {
+      font-size: 0.73rem;
+      line-height: 1.9;
+      color: rgba(245, 210, 170, 0.52);
+      margin-bottom: 0.9rem;
+      letter-spacing: 0.01em;
+      font-weight: 300;
+    }
+
+    .modal p:last-child { margin-bottom: 0; }
+
+    .modal em {
+      color: #f07040;
+      font-style: normal;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div class="glass-overlay" id="glassOverlay"></div>
+
+<div class="corner-tl" id="cornerTL">
+  <span class="corner-label">ember <span style="color:rgba(232,82,26,0.5)">·</span> url shortener</span>
+</div>
+
+<div class="corner-tr" id="cornerTR">
+  <button class="pill-btn" onclick="toggleGlass()">Glass: On</button>
+</div>
+
+<div class="corner-br" id="cornerBR">
+  <button class="pill-btn" onclick="openAbout()">About</button>
+</div>
+
+<div class="ui">
+  <div class="card" id="mainCard">
+
+    <div class="brand">
+      <div class="brand-top">
+        <h1>Ember</h1>
+        <div class="brand-dot" id="brandDot"></div>
+      </div>
+      <p class="brand-sub">Entropy-seeded links</p>
+    </div>
+
+    <div class="entropy-strip">
+      <span class="entropy-label">Live entropy</span>
+      <span class="entropy-val" id="entropyVal">sampling...</span>
+    </div>
+
+    <input type="text" id="urlInput" placeholder="https://your-long-url.com/goes/here"/>
+
+    <button class="shorten-btn" id="shortenBtn" onclick="shortenURL()">Shorten</button>
+
+    <div class="result" id="result">
+      <span class="result-label">Your short link</span>
+      <a class="result-url" id="resultUrl" href="#" target="_blank"></a>
+      <button class="copy-btn" onclick="copyURL()">Copy</button>
+    </div>
+    <div class="error" id="error"></div>
+
+  </div>
+</div>
+
+<!-- About Modal -->
+<div class="modal-backdrop" id="aboutModal" onclick="closeAboutOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAbout()">✕</button>
+
+    <div class="modal-author">
+      <img src="https://avatars.githubusercontent.com/u/143950462?v=4" alt="Jay"/>
+      <div class="modal-author-info">
+        <span class="modal-author-name">Jay Rathod</span>
+        <div class="modal-author-links">
+          <a href="https://github.com/jay06rathod" target="_blank">GitHub</a>
+          <a href="https://x.com/Jay_Rathod_06" target="_blank">Twitter / X</a>
+        </div>
+      </div>
+    </div>
+
+    <h2>Why does a URL shortener need entropy?</h2>
+
+    <p>Honestly, it didn't. But where's the fun in that?</p>
+
+    <p>I was bored one day and thought — why not build a URL shortener? Good Flask practice, simple project. Wrote the whole backend, and just as I was about to jump on the frontend, I noticed the short codes were just <em>sequential numbers</em>. `1`, `2`, `3`. Completely predictable. Anyone could just guess other people's links.</p>
+
+    <p>That got me thinking about <em>randomness</em>. Which led me down a rabbit hole to Cloudflare's lava lamp wall — they film actual physical lava lamps to generate cryptographic entropy that secures a chunk of the internet. Real chaos, turned into keys.</p>
+
+    <p>I can't film lava lamps. So I built one in your browser instead. Every time you shorten a link, Ember samples the live pixel state of the animation — blobs mid-merge, mid-drift — and mixes that into the short code seed. It's <em>pseudo-random</em>, not true entropy. I know that. But it's a better story than `id + 1`.</p>
+
+    <p>The UI? I'm genuinely bad at frontend and find it kind of boring to write — so I had some help there. The backend though, that's all mine. Wrote every line of Flask myself, learning as I went.</p>
+
+    <p><em>That's it. That's the whole story.</em></p>
+  </div>
+</div>
+
+<script>
+  // ── Lava Lamp ───────────────────────────────────────────────────────────────
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let W, H, imageData, data;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    imageData = ctx.createImageData(W, H);
+    data = imageData.data;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const blobs = Array.from({ length: 7 }, () => ({
+    x: W * (0.2 + 0.6 * Math.random()),
+    y: H * (0.2 + 0.6 * Math.random()),
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.55,
+    r: 80 + Math.random() * 80,
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.3 + Math.random() * 0.5,
+  }));
+
+  const PALETTE = [[100,10,0],[180,30,0],[230,60,0],[255,100,10],[255,150,30]];
+
+  function lerpColor(a, b, t) {
+    return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+  }
+
+  function getColor(v) {
+    const scaled = v * (PALETTE.length - 1);
+    const i = Math.floor(scaled);
+    return lerpColor(PALETTE[Math.min(i, PALETTE.length-1)], PALETTE[Math.min(i+1, PALETTE.length-1)], scaled - i);
+  }
+
+  let t = 0;
+  const SCALE = 3;
+
+  function draw() {
+    t += 0.008;
+    blobs.forEach(b => {
+      b.x += b.vx + Math.sin(t * b.speed + b.phase) * 0.4;
+      b.y += b.vy + Math.cos(t * b.speed * 0.7 + b.phase) * 0.35;
+      if (b.x < b.r)           { b.x = b.r;         b.vx =  Math.abs(b.vx); }
+      if (b.x > W - b.r)       { b.x = W - b.r;     b.vx = -Math.abs(b.vx); }
+      if (b.y < b.r * 0.5)     { b.y = b.r * 0.5;   b.vy =  Math.abs(b.vy); }
+      if (b.y > H - b.r * 0.5) { b.y = H - b.r*0.5; b.vy = -Math.abs(b.vy); }
+    });
+
+    const sw = Math.ceil(W / SCALE), sh = Math.ceil(H / SCALE);
+    const small = new Float32Array(sw * sh);
+
+    for (let sy = 0; sy < sh; sy++) {
+      for (let sx = 0; sx < sw; sx++) {
+        const px = sx*SCALE, py = sy*SCALE;
+        let v = 0;
+        for (const b of blobs) {
+          const dx = px-b.x, dy = py-b.y;
+          v += (b.r*b.r) / (dx*dx + dy*dy + 1);
+        }
+        small[sy*sw+sx] = v;
+      }
+    }
+
+    const TH = 1.0, GL = 0.35;
+    for (let py = 0; py < H; py++) {
+      for (let px = 0; px < W; px++) {
+        const sx = Math.min(Math.floor(px/SCALE), sw-1);
+        const sy = Math.min(Math.floor(py/SCALE), sh-1);
+        const v = small[sy*sw+sx];
+        const idx = (py*W+px)*4;
+        if (v >= TH) {
+          const [r,g,b] = getColor(Math.min((v-TH)/1.5, 1));
+          data[idx]=r; data[idx+1]=g; data[idx+2]=b; data[idx+3]=255;
+        } else if (v >= GL) {
+          const a = Math.pow((v-GL)/(TH-GL), 2.5) * 180;
+          data[idx]=200; data[idx+1]=60; data[idx+2]=0; data[idx+3]=a;
+        } else {
+          data[idx]=8; data[idx+1]=3; data[idx+2]=3; data[idx+3]=255;
+        }
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    if (Math.floor(t * 125) % 30 === 0) {
+      const e = sampleEntropy();
+      document.getElementById('entropyVal').textContent =
+        '0x' + e.toString(16).toUpperCase().padStart(8, '0');
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+
+  // ── Entropy ─────────────────────────────────────────────────────────────────
+  function sampleEntropy() {
+    const pts = [[.15,.2],[.5,.15],[.85,.2],[.1,.5],[.5,.5],[.9,.5],[.2,.8],[.5,.85],[.8,.8],[.35,.35],[.65,.35],[.5,.65]];
+    const s = [];
+    for (const [nx,ny] of pts) {
+      const idx = (Math.floor(ny*H)*W + Math.floor(nx*W)) * 4;
+      s.push(data[idx], data[idx+1], data[idx+2]);
+    }
+    let seed = 0;
+    for (let i = 0; i < s.length; i++) seed = ((seed << 5) - seed + s[i]) >>> 0;
+    return seed;
+  }
+
+  // ── GSAP Entrance ────────────────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    gsap.timeline({ defaults: { ease: 'power3.out' } })
+      .to('#mainCard',  { opacity: 1, y: 0, duration: 1.1, delay: 0.15 })
+      .to('#cornerTL',  { opacity: 1, duration: 0.5 }, '-=0.4')
+      .to('#cornerTR',  { opacity: 1, duration: 0.5 }, '-=0.35')
+      .to('#cornerBR',  { opacity: 1, duration: 0.5 }, '-=0.35');
+
+    gsap.to('#brandDot', {
+      boxShadow: '0 0 18px rgba(232,82,26,0.85), 0 0 6px rgba(232,82,26,1)',
+      scale: 1.3,
+      duration: 1.5,
+      repeat: -1, yoyo: true,
+      ease: 'sine.inOut',
+    });
+  });
+
+  // ── Shorten ──────────────────────────────────────────────────────────────────
+  async function shortenURL() {
+    const input   = document.getElementById('urlInput');
+    const btn     = document.getElementById('shortenBtn');
+    const result  = document.getElementById('result');
+    const errorEl = document.getElementById('error');
+    const url     = input.value.trim();
+    const el = document.getElementById('resultUrl');
+    
+    result.classList.remove('visible');
+    errorEl.classList.remove('visible');
+
+    if (!url) { showError('Please enter a URL.'); return; }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      showError('URL must start with http:// or https://'); return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sampling...';
+    const pulse = gsap.to(btn, { opacity: 0.55, duration: 0.45, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+
+    try {
+      const res = await fetch('/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ og_url: url, entropy: sampleEntropy() }),
+      });
+      if (!res.ok) throw new Error();
+      const shortUrl = await res.text();
+      console.log('shortUrl:', shortUrl);
+      el.textContent = shortUrl;
+      el.href = shortUrl;
+      console.log('el content:', el.textContent);
+      result.classList.add('visible');
+      gsap.from(result, { opacity: 0, y: 8, duration: 0.4, ease: 'power2.out' });
+    } catch (e) {
+      console.log(e);
+      showError('Could not shorten URL. Is the Flask server running?');
+    } finally {
+      pulse.kill();
+      btn.disabled = false;
+      btn.textContent = 'Shorten';
+      gsap.set(btn, { opacity: 1 });
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.classList.add('visible');
+    gsap.from(el, { opacity: 0, x: -5, duration: 0.3, ease: 'power2.out' });
+  }
+
+  function copyURL() {
+    navigator.clipboard.writeText(document.getElementById('resultUrl').textContent).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      gsap.from(btn, { scale: 0.9, duration: 0.2, ease: 'back.out(2)' });
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+    });
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') shortenURL();
+  });
+
+  function toggleGlass() {
+    const overlay = document.getElementById('glassOverlay');
+    const btn = document.querySelector('.corner-tr .pill-btn');
+    const isOn = !overlay.classList.contains('hidden');
+    overlay.classList.toggle('hidden', isOn);
+    btn.textContent = isOn ? 'Glass: Off' : 'Glass: On';
+  }
+
+  function openAbout() { document.getElementById('aboutModal').classList.add('open'); }
+  function closeAbout() { document.getElementById('aboutModal').classList.remove('open'); }
+  function closeAboutOutside(e) { if (e.target === document.getElementById('aboutModal')) closeAbout(); }
+</script>
+</body>
+</html>
