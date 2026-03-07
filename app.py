@@ -31,7 +31,7 @@ def shorten():
         """
         cursor.execute(update, (short_code, row_id))
         conn.commit()
-    return f"http://localhost:5000/r/{short_code}"
+    return f"http://ember/r/{short_code}"
 
 def base62_encoder(n):
     strings = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -59,4 +59,5 @@ def redirect_url(short_code):
 init_db()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

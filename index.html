@@ -461,6 +461,12 @@
       font-style: normal;
       font-weight: 400;
     }
+    
+    .modal a {
+      color: #f07040;
+      font-style: normal;
+      font-weight: 400;
+    }
   </style>
 </head>
 <body>
@@ -530,9 +536,9 @@
 
     <p>Honestly, it didn't. But where's the fun in that?</p>
 
-    <p>I was bored one day and thought — why not build a URL shortener? Good Flask practice, simple project. Wrote the whole backend, and just as I was about to jump on the frontend, I noticed the short codes were just <em>sequential numbers</em>. `1`, `2`, `3`. Completely predictable. Anyone could just guess other people's links.</p>
+    <p>I was bored one day and thought, why not build a URL shortener? Good Flask practice, simple project. Wrote the whole backend, and just as I was about to jump on the frontend, I noticed the short codes were just <em>sequential numbers</em>. `1`, `2`, `3`. Completely predictable. Anyone could just guess other people's links.</p>
 
-    <p>That got me thinking about <em>randomness</em>. Which led me down a rabbit hole to Cloudflare's lava lamp wall — they film actual physical lava lamps to generate cryptographic entropy that secures a chunk of the internet. Real chaos, turned into keys.</p>
+    <p>That got me thinking about <em>randomness</em>. Which led me down a rabbit hole to <a href="https://blog.cloudflare.com/randomness-101-lavarand-in-production/">Cloudflare's lava lamp wall</a> they film actual physical lava lamps to generate cryptographic entropy that secures a chunk of the internet. Real chaos, turned into keys.</p>
 
     <p>I can't film lava lamps. So I built one in your browser instead. Every time you shorten a link, Ember samples the live pixel state of the animation — blobs mid-merge, mid-drift — and mixes that into the short code seed. It's <em>pseudo-random</em>, not true entropy. I know that. But it's a better story than `id + 1`.</p>
 
@@ -676,9 +682,9 @@
     const btn     = document.getElementById('shortenBtn');
     const result  = document.getElementById('result');
     const errorEl = document.getElementById('error');
-    const url     = input.value.trim();
+    const url     = input.value.trim(); 
     const el = document.getElementById('resultUrl');
-    
+
     result.classList.remove('visible');
     errorEl.classList.remove('visible');
 
@@ -699,9 +705,10 @@
       });
       if (!res.ok) throw new Error();
       const shortUrl = await res.text();
+      const code = shortUrl.split('/r/')[1];
+      el.textContent = `ember/r/${code}`;
+      el.href = `http://localhost:5000/r/${code}`;
       console.log('shortUrl:', shortUrl);
-      el.textContent = shortUrl;
-      el.href = shortUrl;
       console.log('el content:', el.textContent);
       result.classList.add('visible');
       gsap.from(result, { opacity: 0, y: 8, duration: 0.4, ease: 'power2.out' });
