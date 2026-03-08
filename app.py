@@ -1,7 +1,6 @@
 from flask import Flask, request, redirect
 from flask import send_from_directory
-import sqlite3
-from db import init_db
+from db import init_db, get_conn
 
 app = Flask(__name__)
 
@@ -9,29 +8,24 @@ app = Flask(__name__)
 def home():
     return send_from_directory('.','index.html')
 
-@app.route('/shorten', methods = ['POST'])
+@app.route('/shorten', methods=['POST'])
 def shorten():
-    with sqlite3.connect('urls.db') as conn:
+    with get_conn() as conn:
         cursor = conn.cursor()
         og_url = request.json['og_url']
-        entropy = request.json['entropy']
-        insert_data = """
-            INSERT INTO URLS (original_url) VALUES (?)    
-        """
-
+        entropy = request.json.get('entropy', 0)
+        
+        insert_data = "INSERT INTO URLS (original_url) VALUES (%s) RETURNING id"
         cursor.execute(insert_data, (og_url,))
-        conn.commit()
-        row_id = cursor.lastrowid
-        short_code = base62_encoder(row_id+entropy)
-
-        update = """
-            UPDATE URLS
-            SET short_code = ?
-            WHERE id = ?    
-        """
+        row_id = cursor.fetchone()[0]
+        
+        short_code = base62_encoder(row_id + entropy)
+        
+        update = "UPDATE URLS SET short_code = %s WHERE id = %s"
         cursor.execute(update, (short_code, row_id))
         conn.commit()
-    return f"https://web-production-a7210.up.railway.app/r/{short_code}"
+        
+    return f"https://your-render-app.onrender.com/r/{short_code}"
 
 def base62_encoder(n):
     strings = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -45,10 +39,10 @@ def base62_encoder(n):
 
 @app.route('/r/<short_code>', methods=['GET'])
 def redirect_url(short_code):
-    with sqlite3.connect('urls.db') as conn:
+    with get_conn() as conn:
         cursor = conn.cursor()
         redirect_query = """
-            SELECT original_url FROM URLS WHERE short_code = ?
+            SELECT original_url FROM URLS WHERE short_code = %s
         """
         cursor.execute(redirect_query, (short_code,))
         result = cursor.fetchone()
