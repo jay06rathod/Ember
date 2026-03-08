@@ -716,7 +716,7 @@
       const shortUrl = await res.text();
       const code = shortUrl.split('/r/')[1];
       el.textContent = `ember/r/${code}`;
-      el.href = `http://localhost:5000/r/${code}`;
+      el.href = `https://ember-ages.onrender.com/r/${code}`;
       console.log('shortUrl:', shortUrl);
       console.log('el content:', el.textContent);
       result.classList.add('visible');
