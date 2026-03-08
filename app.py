@@ -25,7 +25,7 @@ def shorten():
         cursor.execute(update, (short_code, row_id))
         conn.commit()
         
-    return f"https://your-render-app.onrender.com/r/{short_code}"
+    return f"https://ember-ages.onrender.com/r/{short_code}"
 
 def base62_encoder(n):
     strings = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
