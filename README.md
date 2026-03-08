@@ -6,8 +6,7 @@
 
 ## Screenshot
 
-https://github.com/user-attachments/assets/d1c22cad-8864-4f22-a596-ee1ee2efbbce
-*Lava blob UI generating entropy-seeded short codes — read more in the About section.*
+[![Ember Demo](thumbnail.png)](https://github.com/user-attachments/assets/d1c22cad-8864-4f22-a596-ee1ee2efbbce)
 ---
 
 ## How It Works
