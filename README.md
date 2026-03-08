@@ -6,7 +6,7 @@
 
 ## Demo Video
 
-[<video controls src="Final_Draft_Demo.mp4" title="Title"></video>](https://github.com/user-attachments/assets/fe603b01-e080-4f05-8dda-2b08f9436a7b)
+https://github.com/user-attachments/assets/fe603b01-e080-4f05-8dda-2b08f9436a7b
 ---
 
 ## How It Works
