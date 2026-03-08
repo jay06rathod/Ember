@@ -4,9 +4,9 @@
 
 ---
 
-## Screenshot
+## Demo Video
 
-[![Ember Demo](thumbnail.png)](https://github.com/user-attachments/assets/d1c22cad-8864-4f22-a596-ee1ee2efbbce)
+<video controls src="Final_Draft_Demo.mp4" title="Title"></video>
 ---
 
 ## How It Works
