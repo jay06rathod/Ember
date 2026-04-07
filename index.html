@@ -554,8 +554,8 @@
   let W, H, imageData, data;
 
   function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
+    W = canvas.width  = window.innerWidth; // assigns the smaller val between both
+    H = canvas.height = window.innerHeight; // same here
     imageData = ctx.createImageData(W, H);
     data = imageData.data;
   }
@@ -563,13 +563,13 @@
   resize();
 
   const blobs = Array.from({ length: 7 }, () => ({
-    x: W * (0.2 + 0.6 * Math.random()),
-    y: H * (0.2 + 0.6 * Math.random()),
-    vx: (Math.random() - 0.5) * 0.4,
-    vy: (Math.random() - 0.5) * 0.55,
-    r: 80 + Math.random() * 80,
-    phase: Math.random() * Math.PI * 2,
-    speed: 0.3 + Math.random() * 0.5,
+    x: W * (0.2 + 0.6 * Math.random()), // so it calculates the center position to spawn a blob in center
+    y: H * (0.2 + 0.6 * Math.random()), // same here, finds the center and spwans blob
+    vx: (Math.random() - 0.5) * 0.4,  //velocity of blob from left to right (width) -0.2 and 0.2
+    vy: (Math.random() - 0.5) * 0.55, //velocity of blob from top to bottom (height) -0.27 to + 0.27
+    r: 80 + Math.random() * 80, // it is the radius blob, which is not exactly a circle, also exactly what we need (randomness)
+    phase: Math.random() * Math.PI * 2, // randomly starting point based on the sine wave function
+    speed: 0.3 + Math.random() * 0.5, // animation speed 
   }));
 
   const PALETTE = [[100,10,0],[180,30,0],[230,60,0],[255,100,10],[255,150,30]];
@@ -590,11 +590,11 @@
   function draw() {
     t += 0.008;
     blobs.forEach(b => {
-      b.x += b.vx + Math.sin(t * b.speed + b.phase) * 0.4;
+      b.x += b.vx + Math.sin(t * b.speed + b.phase) * 0.4;  //so these are basically blob movement which use sine and cosine for organic random movement (entropy)
       b.y += b.vy + Math.cos(t * b.speed * 0.7 + b.phase) * 0.35;
-      if (b.x < b.r)           { b.x = b.r;         b.vx =  Math.abs(b.vx); }
-      if (b.x > W - b.r)       { b.x = W - b.r;     b.vx = -Math.abs(b.vx); }
-      if (b.y < b.r * 0.5)     { b.y = b.r * 0.5;   b.vy =  Math.abs(b.vy); }
+      if (b.x < b.r)           { b.x = b.r;         b.vx =  Math.abs(b.vx); } // prevents hitting the wall
+      if (b.x > W - b.r)       { b.x = W - b.r;     b.vx = -Math.abs(b.vx); } // or moving the blob outta the frame
+      if (b.y < b.r * 0.5)     { b.y = b.r * 0.5;   b.vy =  Math.abs(b.vy); } // all 4 sides
       if (b.y > H - b.r * 0.5) { b.y = H - b.r*0.5; b.vy = -Math.abs(b.vy); }
     });
 
@@ -607,8 +607,8 @@
         let v = 0;
         for (const b of blobs) {
           const dx = px-b.x, dy = py-b.y;
-          v += (b.r*b.r) / (dx*dx + dy*dy + 1);
-        }
+          v += (b.r*b.r) / (dx*dx + dy*dy + 1); // this is the actual blob effect, it uses how blobs influence with each other
+        } // so as close the blob gets it merges making a blob merging effect
         small[sy*sw+sx] = v;
       }
     }
@@ -620,7 +620,7 @@
         const sy = Math.min(Math.floor(py/SCALE), sh-1);
         const v = small[sy*sw+sx];
         const idx = (py*W+px)*4;
-        if (v >= TH) {
+        if (v >= TH) {  // basically adding layers of colors and moving them with respect to each other without any glitches
           const [r,g,b] = getColor(Math.min((v-TH)/1.5, 1));
           data[idx]=r; data[idx+1]=g; data[idx+2]=b; data[idx+3]=255;
         } else if (v >= GL) {
@@ -646,7 +646,7 @@
   draw();
 
   // ── Entropy ─────────────────────────────────────────────────────────────────
-  function sampleEntropy() {
+  function sampleEntropy() {  // now here's where the data comes from it means all the data that handles the entropy as well as the animation on the canvas
     const pts = [[.15,.2],[.5,.15],[.85,.2],[.1,.5],[.5,.5],[.9,.5],[.2,.8],[.5,.85],[.8,.8],[.35,.35],[.65,.35],[.5,.65]];
     const s = [];
     for (const [nx,ny] of pts) {
@@ -659,7 +659,7 @@
   }
 
   // ── GSAP Entrance ────────────────────────────────────────────────────────────
-  window.addEventListener('load', () => {
+  window.addEventListener('load', () => { // actually adding smooth frames which makes the blobs do its natural movement
     gsap.timeline({ defaults: { ease: 'power3.out' } })
       .to('#mainCard',  { opacity: 1, y: 0, duration: 1.1, delay: 0.15 })
       .to('#cornerTL',  { opacity: 1, duration: 0.5 }, '-=0.4')
@@ -676,7 +676,7 @@
   });
 
   // ── Shorten ──────────────────────────────────────────────────────────────────
-  async function shortenURL() {
+  async function shortenURL() { // all about shortening the code and using above data and displaying it to page
     const input   = document.getElementById('urlInput');
     const btn     = document.getElementById('shortenBtn');
     const result  = document.getElementById('result');
