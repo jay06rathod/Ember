@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template
 from flask import send_from_directory
 from db import init_db, get_conn
 
@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return send_from_directory('.','index.html')
+    return render_template('index.html')
 
 @app.route('/shorten', methods=['POST'])
 def shorten():
